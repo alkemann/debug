@@ -1,0 +1,16 @@
+{
+    "name": "alkemann/debug",
+    "description": "Standalone al13 debug toolkit",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alexander Morland",
+            "email": "alek.morland@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "alkemann\\debug\\": "src/"
+        }
+    }
+}
