@@ -1,13 +1,13 @@
 <?php
-/**
- * Global debug methods
- */
+
 namespace alkemann\debug\adapters;
 
-class Html
+use alkemann\debug\Debug;
+
+class Html implements DebugInterface
 {
 
-    public static function dump_array(array $array, $debug)
+    public static function dump_array(array $array, Debug $debug): string
     {
         $debug->current_depth++;
         $count = count($array);
@@ -17,7 +17,7 @@ class Html
             $ret .= '<ul class="array">';
             if (in_array('array', $debug->options['avoid'])) {
                 $ret .= '<li><span class="empty"> -- Array Type Avoided -- </span></li>';
-            } else
+            } else {
                 foreach ($array as $key => $value) {
                     $ret .= '<li>[ <span class="key">' . $key . '</span> ] => ';
                     if (is_string($key) && in_array($key, $debug->options['blacklist']['key'])) {
@@ -32,13 +32,14 @@ class Html
                     }
                     $ret .= $debug->dump_it($value);
                 }
+            }
             $ret .= '</ul>';
         }
         $debug->current_depth--;
         return $ret;
     }
 
-    public static function dump_object($obj, $debug)
+    public static function dump_object($obj, Debug $debug): string
     {
         $debug->current_depth++;
         $hash = spl_object_hash($obj);
@@ -51,11 +52,11 @@ class Html
             $debug->current_depth--;
             return $ret . '<li><span class="empty"> -- Blacklisted Object Avoided -- </span></li></ul>';
         }
-        if (isset($debug->object_references[$hash]))  {
+        if (isset($debug->object_references[$hash])) {
             $debug->current_depth--;
             return $ret . '<li><span class="empty"> -- Object Recursion Avoided -- </span></li></ul>';
         }
-        if (in_array('object', $debug->options['avoid']))  {
+        if (in_array('object', $debug->options['avoid'])) {
             $debug->current_depth--;
             return $ret . '<li><span class="empty"> -- Object Type Avoided -- </span></li></ul>';
         }
@@ -67,23 +68,27 @@ class Html
         $reflection = new \ReflectionObject($obj);
         $props = '';
         foreach (array(
-            'public' => \ReflectionProperty::IS_PUBLIC,
-            'protected' => \ReflectionProperty::IS_PROTECTED,
-            'private' => \ReflectionProperty::IS_PRIVATE
-            ) as $type => $rule) {
-                $props .= self::dump_properties($reflection, $obj, $type, $rule, $debug);
+                     'public' => \ReflectionProperty::IS_PUBLIC,
+                     'protected' => \ReflectionProperty::IS_PROTECTED,
+                     'private' => \ReflectionProperty::IS_PRIVATE
+                 ) as $type => $rule) {
+            $props .= self::dump_properties($reflection, $obj, $type, $rule, $debug);
         }
         $debug->current_depth--;
-        if ($props == '') return $ret .= '<li><span class="empty"> -- No properties -- </span></li></ul>';
-        else  $ret .=  $props;
+        if ($props == '') {
+            return $ret .= '<li><span class="empty"> -- No properties -- </span></li></ul>';
+        } else {
+            $ret .= $props;
+        }
         $ret .= '</ul>';
-        return  $ret;
+        return $ret;
     }
 
-    public static function dump_properties($reflection, $obj, $type, $rule, $debug)
+    public static function dump_properties(\ReflectionObject $reflection, $obj, string $type, string $rule, Debug $debug): string
     {
         $vars = $reflection->getProperties($rule);
-        $i = 0; $ret = '';
+        $i = 0;
+        $ret = '';
         foreach ($vars as $refProp) {
             $property = $refProp->getName();
             $i++;
@@ -91,57 +96,68 @@ class Html
             $value = $refProp->getValue($obj);
             $ret .= '<li>';
             $ret .= '<span class="access">' . $type . '</span> <span class="property">' . $property . '</span> ';
-            if (in_array($property, $debug->options['blacklist']['property']))
+            if (in_array($property, $debug->options['blacklist']['property'])) {
                 $ret .= ' : <span class="empty"> -- Blacklisted Property Avoided -- </span>';
-            else
+            } else {
                 $ret .= ' : ' . $debug->dump_it($value);
+            }
             $ret .= '</li>';
         }
         return $i ? $ret : '';
     }
 
-    public static function dump_other($var)
+    public static function dump_other($var): string
     {
+        $length = 0;
         $type = gettype($var);
         switch ($type) {
-            case 'boolean': $var = $var ? 'true' : 'false'; break;
-            case 'string' : $length = strlen($var); $var = '\'' . htmlentities($var) . '\''; break;
-            case 'NULL' : return '<span class="empty">NULL</span>'; break;
+            case 'boolean':
+                $var = $var ? 'true' : 'false';
+                break;
+            case 'string' :
+                $length = strlen($var);
+                $var = '\'' . htmlentities($var) . '\'';
+                break;
+            case 'NULL' :
+                return '<span class="empty">NULL</span>';
+                break;
         }
-		$ret = '<span class="value ' . $type .'">' . $var . '</span> ';
+        $ret = '<span class="value ' . $type . '">' . $var . '</span> ';
 
-		if ($type == 'string') {
-			$ret .= '<span class="type">string[' . $length . ']</span>';
-		} else {
-			$ret .= '<span class="type">' . $type . '</span>';
-		}
+        if ($type == 'string') {
+            $ret .= '<span class="type">string[' . $length . ']</span>';
+        } else {
+            $ret .= '<span class="type">' . $type . '</span>';
+        }
         return $ret;
     }
 
-    public static function locationString($location)
+    public static function locationString(array $location): string
     {
         extract($location);
-        $ret = "line: <span>$line</span> &nbsp;".
-               "file: <span>$file</span> &nbsp;";
-        $ret .= isset($class) ? "class: <span>$class</span> &nbsp;" :'';
-        $ret .= isset($function) && $function != 'include' ? "function: <span>$function</span> &nbsp;" :'';
+        $ret = "line: <span>$line</span> &nbsp;" .
+            "file: <span>$file</span> &nbsp;";
+        $ret .= isset($class) ? "class: <span>$class</span> &nbsp;" : '';
+        $ret .= isset($function) && $function != 'include' ? "function: <span>$function</span> &nbsp;" : '';
         return $ret;
     }
 
-    public static function top(array $outputs, $key = null)
+    public static function top(array $outputs, ?string $key = null): void
     {
-            if (empty($outputs)) return;
-            echo '<div id="debugger">';
-            if ($key !== null) {
-                    if (!isset($outputs[$key])) {
-                            throw new Exception('DEBUG: Not that many outputs in buffer');
-                    }
-                    echo $outputs[$key];
-                    return;
+        if (empty($outputs)) {
+            return;
+        }
+        echo '<div id="debugger">';
+        if ($key !== null) {
+            if (!isset($outputs[$key])) {
+                throw new \Exception('DEBUG: Not that many outputs in buffer');
             }
-            foreach ($outputs as $out) {
-                    echo $out;
-            }
-            echo '</div>';
+            echo $outputs[$key];
+            return;
+        }
+        foreach ($outputs as $out) {
+            echo $out;
+        }
+        echo '</div>';
     }
 }

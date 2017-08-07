@@ -1,7 +1,5 @@
 <?php
-/**
- * Global debug methods
- */
+
 namespace alkemann\debug\adapters;
 
 /**
@@ -35,10 +33,10 @@ namespace alkemann\debug\adapters;
  * }}}
  *
  */
-class Json
+class Json implements DebugInterface
 {
 
-    public static function dump_array(array $array, $debug)
+    public static function dump_array(array $array, $debug): array
     {
         $debug->current_depth++;
         $count = count($array);
@@ -64,7 +62,7 @@ class Json
         return array(' array [' . $count . ']' => $ret);
     }
 
-    public static function dump_object($obj, $debug)
+    public static function dump_object($obj, $debug): array
     {
         $debug->current_depth++;
         $hash = spl_object_hash($obj);
@@ -110,7 +108,7 @@ class Json
         return array( $class . ' [' . $id . ']'  => $ret);
     }
 
-    public static function dump_properties($reflection, $obj, $type, $rule, $debug)
+    public static function dump_properties($reflection, $obj, $type, $rule, $debug): array
     {
         $vars = $reflection->getProperties($rule);
         $i = 0; $ret = array();
@@ -135,7 +133,7 @@ class Json
         return $ret;
     }
 
-    public static function dump_other($var)
+    public static function dump_other($var): string
     {
         $type = gettype($var);
         switch ($type) {
@@ -146,7 +144,7 @@ class Json
         return $var . ' (' . $type . ')';
     }
 
-    public static function locationString($location)
+    public static function locationString(array $location): \stdClass
     {
         extract($location);
 		$ret = new \stdClass();

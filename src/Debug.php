@@ -6,6 +6,7 @@ namespace alkemann\debug;
 
 use alkemann\debug\adapters\Html;
 use alkemann\debug\adapters\Json;
+use Exception;
 
 /**
  * Class Debug
@@ -15,18 +16,18 @@ use alkemann\debug\adapters\Json;
 class Debug
 {
 
-    public static $defaults = array(
+    public static $defaults = [
         'echo' => true,
         'mode' => 'Html',
         'depth' => 10,
         'avoid' => [],
         'docroot' => '/webroot',
-        'blacklist' => array(
+        'blacklist' => [
             'class' => [],
             'property' => [],
             'key' => []
-        )
-    );
+        ]
+    ];
 
     protected static $__instance = null;
 
@@ -40,9 +41,9 @@ class Debug
 	 *
 	 * @return Debug
 	 */
-    public static function get_instance()
+    public static function get_instance(): Debug
     {
-        if (!static::$__instance) {
+        if (is_null(static::$__instance)) {
             $class = __CLASS__;
             static::$__instance = new $class();
         }
@@ -55,7 +56,7 @@ class Debug
 	 * @param mixed $var
 	 * @param array $options
 	 */
-    public function dump($var, $options = [])
+    public function dump($var, array $options = []): void
     {
         $options += self::$defaults + array('split' => false, 'trace' => false);
         $this->options = $options;
@@ -95,10 +96,10 @@ class Debug
 	/**
 	 * Return output dump as array
 	 *
-	 * @param string $key
+	 * @param int|string $key
 	 * @return array
 	 */
-	public function array_out($key = null)
+	public function array_out($key = null): array
     {
 		if (count($this->output) < 2 || ($key && !isset($this->output[$key]))) {
 			return [];
@@ -113,9 +114,9 @@ class Debug
 	/**
 	 * Echo out stored debugging
 	 *
-	 * @param int $key
+	 * @param int|string $key
 	 */
-	public function out($key = null)
+	public function out($key = null): void
     {
 		if ($this->options['mode'] == 'Html') {
 			Html::top($this->output, $key);
@@ -124,11 +125,11 @@ class Debug
 		$this->__out($key);
 	}
 
-	private function __out($key = null)
+	private function __out($key = null): void
     {
 		if ($key !== null) {
 			if (!isset($this->output[$key])) {
-				throw new \Exception('DEBUG: Not that many outputs in buffer');
+				throw new Exception('DEBUG: Not that many outputs in buffer');
 			}
 			echo $this->output[$key];
 			return;
@@ -144,7 +145,7 @@ class Debug
 	 *
 	 * @return array
 	 */
-    public function defines()
+    public function defines(): array
     {
         $defines = get_defined_constants();
         $ret = []; $offset = -1;
@@ -163,9 +164,17 @@ class Debug
 	 * @param mixed $var
 	 * @return string
 	 */
-    public function dump_it($var)
+    public function dump_it($var): string
     {
-		$adapter = '\alkemann\debug\adapters\\'. $this->options['mode'];
+        switch ($this->options['mode']) {
+            case 'Json':
+                $adapter = Json::class;
+                break;
+            default:
+            case 'Html':
+                $adapter = Html::class;
+                break;
+        }
         if (is_array($var))
             return $adapter::dump_array($var, $this);
         elseif (is_object($var))
@@ -180,14 +189,14 @@ class Debug
 	 * @param string $trace
 	 * @return array
 	 */
-    public function location($trace)
+    public function location($trace): array
     {
         $root = substr($_SERVER['DOCUMENT_ROOT'], 0 , strlen(static::$defaults['docroot']) * -1);
         $file = implode('/', array_diff(explode('/', $trace[0]['file']), explode('/', $root)));
-        $ret = array(
+        $ret = [
             'file' => $file,
             'line' => $trace[0]['line']
-        );
+        ];
         if (isset($trace[1]['function'])) $ret['function'] = $trace[1]['function'];
         if (isset($trace[1]['class'])) $ret['class'] = $trace[1]['class'];
         return $ret;
@@ -214,20 +223,20 @@ class Debug
         return $arr;
     }
 
-    public function api($var)
+    public function api($var): array
     {
         if (is_object($var)) {
             $class = get_class($var);
             $obj = $var;
         } else {
             if (!class_exists($var)) {
-                throw new \Exception('Class ['.$var.'] doesn\'t exist');
+                throw new Exception('Class ['.$var.'] doesn\'t exist');
             }
             $class = $var;
             try {
                 $obj = new $class();
-            } catch (\Exception $e) {
-                throw new \Exception('Debug::api could not instantiate ['.$var.'], send it an object.');
+            } catch (Exception $e) {
+                throw new Exception('Debug::api could not instantiate ['.$var.'], send it an object.');
             }
         }
         $reflection = new \ReflectionObject($obj);
