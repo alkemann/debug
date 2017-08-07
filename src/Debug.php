@@ -34,7 +34,7 @@ class Debug
     public $current_depth;
     public $object_references;
     public $options;
-    public $output = ['<style type="text/css">@import url("https://raw.githubusercontent.com/alkemann/debug/master/webroot/css/debug.css");</style>'];
+    public $output = ['<style type="text/css">@import url("https://cdn.rawgit.com/alkemann/debug/master/webroot/css/debug.css");</style>'];
 
 	/**
 	 * Get the singleton instance

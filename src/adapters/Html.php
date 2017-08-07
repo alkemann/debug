@@ -7,7 +7,7 @@ use alkemann\debug\Debug;
 class Html implements DebugInterface
 {
 
-    public static function dump_array(array $array, Debug $debug): string
+    public static function dump_array(array $array, Debug $debug)
     {
         $debug->current_depth++;
         $count = count($array);
@@ -39,7 +39,7 @@ class Html implements DebugInterface
         return $ret;
     }
 
-    public static function dump_object($obj, Debug $debug): string
+    public static function dump_object($obj, Debug $debug)
     {
         $debug->current_depth++;
         $hash = spl_object_hash($obj);
@@ -84,7 +84,7 @@ class Html implements DebugInterface
         return $ret;
     }
 
-    public static function dump_properties(\ReflectionObject $reflection, $obj, string $type, string $rule, Debug $debug): string
+    public static function dump_properties(\ReflectionObject $reflection, $obj, string $type, string $rule, Debug $debug)
     {
         $vars = $reflection->getProperties($rule);
         $i = 0;
@@ -132,7 +132,7 @@ class Html implements DebugInterface
         return $ret;
     }
 
-    public static function locationString(array $location): string
+    public static function locationString(array $location)
     {
         extract($location);
         $ret = "line: <span>$line</span> &nbsp;" .
