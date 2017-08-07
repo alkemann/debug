@@ -3,7 +3,7 @@
   * Global convenience methods
   */
 
-use alkemann\debug\util\Debug;
+use alkemann\debug\Debug;
 
 /**
  * Dump any amount of paramters in a html styled var_dump
@@ -55,12 +55,12 @@ function dd()
         $split = false;
         $args = $args[0];
     }
-	$echo = true;
+    $echo = true;
     @ob_end_clean();
     $debug->dump($args, compact('trace', 'split', 'echo'));
-	if (!empty($debug->output)) {
-		dout();
-	}
+    if (!empty($debug->output)) {
+        dout();
+    }
     die('<div style="margin-top: 25px;font-size: 10px;color: #500;">-Debug die-</div>');
 }
 
@@ -182,10 +182,10 @@ function dw($method)
 function dout($key = null, $incStyle = true)
 {
     $debug = Debug::get_instance();
-	if ($key && $incStyle) {
-		$debug->out(0);
-	}
-	$debug->out($key);
+    if ($key && $incStyle) {
+        $debug->out(0);
+    }
+    $debug->out($key);
 }
 
 /**
@@ -199,5 +199,5 @@ function dout($key = null, $incStyle = true)
 function daout($key = null)
 {
     $debug = Debug::get_instance();
-	return $debug->array_out($key);
+    return $debug->array_out($key);
 }

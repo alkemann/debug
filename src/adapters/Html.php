@@ -2,7 +2,7 @@
 /**
  * Global debug methods
  */
-namespace alkemann\debug\util\adapters;
+namespace alkemann\debug\adapters;
 
 class Html
 {

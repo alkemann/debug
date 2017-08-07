@@ -1,6 +1,6 @@
 {
     "name": "alkemann/debug",
-    "description": "Standalone al13 debug toolkit",
+    "description": "Debug tool for dumping data, prettily",
     "license": "MIT",
     "authors": [
         {

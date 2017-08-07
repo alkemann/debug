@@ -2,8 +2,16 @@
 /**
  * Global debug methods
  */
-namespace alkemann\debug\util;
+namespace alkemann\debug;
 
+use alkemann\debug\adapters\Html;
+use alkemann\debug\adapters\Json;
+
+/**
+ * Class Debug
+ *
+ * @package alkemann\debug
+ */
 class Debug
 {
 
@@ -11,12 +19,12 @@ class Debug
         'echo' => true,
         'mode' => 'Html',
         'depth' => 10,
-        'avoid' => array(),
-        'docroot' => '/web',
+        'avoid' => [],
+        'docroot' => '/webroot',
         'blacklist' => array(
-            'class' => array(),
-            'property' => array(),
-            'key' => array()
+            'class' => [],
+            'property' => [],
+            'key' => []
         )
     );
 
@@ -25,12 +33,12 @@ class Debug
     public $current_depth;
     public $object_references;
     public $options;
-    public $output = array('<style type="text/css">@import url("/css/debug.css");</style>');
+    public $output = ['<style type="text/css">@import url("https://raw.githubusercontent.com/alkemann/debug/master/webroot/css/debug.css");</style>'];
 
 	/**
 	 * Get the singleton instance
 	 *
-	 * @return alkemann\debug\util\Debug
+	 * @return Debug
 	 */
     public static function get_instance()
     {
@@ -47,18 +55,17 @@ class Debug
 	 * @param mixed $var
 	 * @param array $options
 	 */
-    public function dump($var, $options = array())
+    public function dump($var, $options = [])
     {
         $options += self::$defaults + array('split' => false, 'trace' => false);
         $this->options = $options;
         $this->current_depth = 0;
-        $this->object_references = array();
+        $this->object_references = [];
 
         if (!$options['trace']) $options['trace'] = debug_backtrace();
-        extract($options);
+        $trace = $options['trace'];
         $location = $this->location($trace);
-
-        $dump = array();
+        $dump = [];
         if ($options['split'] && is_array($var)) {
             $this->current_depth = 0;
             foreach ($var as $one) {
@@ -68,14 +75,14 @@ class Debug
         } else
             $dump[] = $this->dump_it($var);
 
-        switch ($mode) {
+        switch ($options['mode']) {
 			case 'Json':
-				$locString = \alkemann\debug\util\adapters\Json::locationString($location);
+				$locString = Json::locationString($location);
 				$this->output[] = array('location' => $locString, 'dump' => $dump);
 				break;
 			case 'Html' :
 			default :
-				$locString = \alkemann\debug\util\adapters\Html::locationString($location);
+				$locString = Html::locationString($location);
 				$this->output[] = '<div class="debug-dump"><div class="debug-location">' . $locString . '</div>'.
 					'<div class="debug-content"> ' . implode("<br>\n", $dump) . '</div></div>';
 				break;
@@ -94,7 +101,7 @@ class Debug
 	public function array_out($key = null)
     {
 		if (count($this->output) < 2 || ($key && !isset($this->output[$key]))) {
-			return array();
+			return [];
 		}
 		if ($key) {
 			return $this->output[$key];
@@ -111,7 +118,7 @@ class Debug
 	public function out($key = null)
     {
 		if ($this->options['mode'] == 'Html') {
-			\alkemann\debug\util\adapters\Html::top($this->output, $key);
+			Html::top($this->output, $key);
 			return;
 		}
 		$this->__out($key);
@@ -121,7 +128,7 @@ class Debug
     {
 		if ($key !== null) {
 			if (!isset($this->output[$key])) {
-				throw new Exception('DEBUG: Not that many outputs in buffer');
+				throw new \Exception('DEBUG: Not that many outputs in buffer');
 			}
 			echo $this->output[$key];
 			return;
@@ -129,18 +136,18 @@ class Debug
 		foreach ($this->output as $out) {
 			echo $out;
 		}
-		$this->output = array();
+		$this->output = [];
 	}
 
 	/**
 	 * Grab global defines, will start at 'FIRST_APP_CONSTANT', if defined
 	 *
-	 * @return type
+	 * @return array
 	 */
     public function defines()
     {
         $defines = get_defined_constants();
-        $ret = array(); $offset = -1;
+        $ret = []; $offset = -1;
         while ($def = array_slice($defines, $offset--, 1)) {
             $key = key($def);
             $value = current($def);
@@ -158,7 +165,7 @@ class Debug
 	 */
     public function dump_it($var)
     {
-		$adapter = '\alkemann\debug\util\adapters\\'. $this->options['mode'];
+		$adapter = '\alkemann\debug\adapters\\'. $this->options['mode'];
         if (is_array($var))
             return $adapter::dump_array($var, $this);
         elseif (is_object($var))
@@ -190,10 +197,10 @@ class Debug
     {
         $root = substr($_SERVER['DOCUMENT_ROOT'], 0 , strlen(static::$defaults['docroot']) * -1);
         $trace = debug_backtrace();
-        array_unshift($trace, array());
-        $arr = array();
+        array_unshift($trace, []);
+        $arr = [];
         foreach ($trace as $k => $one) {
-            $arr[$k] = array();
+            $arr[$k] = [];
             if (isset($one['file'])) {
                 $file = implode('/', array_diff(explode('/', $one['file']), explode('/', $root)));
                 $arr[$k]['file'] = $file;
@@ -224,7 +231,7 @@ class Debug
             }
         }
         $reflection = new \ReflectionObject($obj);
-        $properties = array();
+        $properties = [];
         foreach (array(
             'public' => \ReflectionProperty::IS_PUBLIC,
             'protected' => \ReflectionProperty::IS_PROTECTED,
@@ -247,7 +254,7 @@ class Debug
         }
         $constants = $reflection->getConstants();
 
-        $methods = array();
+        $methods = [];
 
         foreach (array(
             'public' => \ReflectionMethod::IS_PUBLIC,
@@ -257,7 +264,7 @@ class Debug
                 $refMethods = $reflection->getMethods($rule);
                 foreach ($refMethods as $refMethod) {
                     $refParams = $refMethod->getParameters();
-                    $params = array();
+                    $params = [];
                     foreach ($refParams as $refParam) {
                         $params[] = $refParam->getName();
                     }
@@ -277,7 +284,7 @@ class Debug
                     $comment = str_replace("\r\n", "\n", $comment);
                     $commentParts = explode('@', $comment);
                     $description = array_shift($commentParts);
-                    $tags = array();
+                    $tags = [];
                     foreach ($commentParts as $part) {
                         $tagArr = explode(' ', $part, 2);
                         if ($tagArr[0] == 'param') {

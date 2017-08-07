@@ -2,7 +2,7 @@
 /**
  * Global debug methods
  */
-namespace alkemann\debug\util\adapters;
+namespace alkemann\debug\adapters;
 
 /**
  * Put's dump output in arrays such that they go nicely
