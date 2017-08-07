@@ -6,7 +6,7 @@
 use alkemann\debug\Debug;
 
 /**
- * Dump any amount of paramters in a html styled var_dump
+ * Dump any amount of parameters in a html styled var_dump
  *
  * @param mixed any amount
  */
@@ -37,6 +37,7 @@ function dt()
 
     @ob_end_clean();
     $debug_trace = $debug->trace();
+    $traced = [];
     foreach ($debug_trace as $t) {
         @$traced[] = (empty($t['class'])?$t['file']:$t['class']).'::'.$t['function'].'::'.$t['line'];
     }
@@ -194,7 +195,7 @@ function dout($key = null, $incStyle = true)
  * Place in media handler for json as part of the container
  *
  * @param string $key
- * @return string
+ * @return array
  */
 function daout($key = null)
 {
