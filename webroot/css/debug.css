@@ -38,6 +38,8 @@ div.debug-dump > ul { border: 0 !important; }
 .debug-dump span.property { color: #28B869; font-weight: bold; }
 .debug-dump span.type { color: #2830B8; }
 .debug-dump span.access { color: #EC9B00;   }
+.debug-dump span.value.closure.signature { color: #A22; }
+.debug-dump span.value.closure.body { color: #444; font-weight: normal; }
 .debug-dump span.location { color: #336;}
 .debug-dump span.key { color: #2877B8; font-weight: bold; }
 .debug-dump span.count { color: #2877B8; }

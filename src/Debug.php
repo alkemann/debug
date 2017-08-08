@@ -178,7 +178,7 @@ class Debug
         if (is_array($var))
             return $adapter::dump_array($var, $this);
         elseif ($var instanceof \Closure)
-            return $adapter::dump_closure($var, $this);
+            return $adapter::dump_closure($var, $this, true);
         elseif (is_object($var))
             return $adapter::dump_object($var, $this);
         else

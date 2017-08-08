@@ -84,34 +84,64 @@ class Html implements DebugInterface
         return $ret;
     }
 
-    public static function dump_closure(\Closure $c, Debug $debug) {
-        $str = '<span class="value">Closure</span><span class="value integer">(';
+    public static function dump_closure(\Closure $c, Debug $debug, bool $include_body = false): string
+    {
+        $str = '<span class="value">Closure</span> <span class="">function(';
         $r = new \ReflectionFunction($c);
         $params = [];
         foreach($r->getParameters() as $p) {
             $s = '';
-            if($p->isArray()) {
-                $s .= 'array ';
-            } else if($p->getClass()) {
-                $s .= '<span class="class">' . $p->getClass()->name . '</span> ';
+            if($p->getClass()) {
+                $s .= '<span class="class">' . $p->getClass()->name . ' </span> ';
+            } elseif ($p->hasType()) {
+                $s .= '<span class="class">' . $p->getType() . '</span> ';
             }
+
             if($p->isPassedByReference()){
                 $s .= '&';
             }
             $s .= '$' . $p->name;
-            if($p->isOptional()) {
-                $s .= ' = ' . var_export($p->getDefaultValue(), TRUE);
+            if($p->isDefaultValueAvailable()) {
+                $v = $p->getDefaultValue();
+                if (is_array($v)) {
+                    $s .= ' = [ ]';
+                } else {
+                    $s .= ' = ' . static::dump_other($v, TRUE);
+                }
             }
             $params []= $s;
         }
         $str .= implode(', ', $params);
-        $str .= ')</span><span class=""> {' . '<br />' . PHP_EOL;
-        $lines = file($r->getFileName());
-        for($l = $r->getStartLine(); $l < $r->getEndLine(); $l++) {
-            $str .= '&nbsp;&nbsp;' . $lines[$l] . '<br />';
+        $str .= ')';
+        if ($r->hasReturnType()) {
+            $t = $r->getReturnType();
+            if (class_exists($t)) {
+                $t = '<span class="class">' . $t . ' </span> ';
+            }
+            $str .= ' : ' . $t;
         }
         $str .= '</span>';
-
+        [$start, $end] = [$r->getStartLine(), $r->getEndLine()];
+        if ($include_body || $start == $end) {
+            // @TODO this is a bit .. naive
+            $str .= '<span class="value closure body"><br />';
+            $lines = file($r->getFileName());
+            if ($start == $end) {
+                $c = $lines[$start - 1];
+                $fat = strpos($c, '{');
+                $len = strpos($c, '}') - $fat + 1;
+                $c = substr($c, $fat, $len);
+                $str .= '&nbsp;' . $c . '<br />';
+            } else {
+                if (strpos($lines[$start], '{') === false) {
+                    $str .= '&nbsp;{<br />';
+                }
+                for($l = $start; $l < $end; $l++) {
+                    $str .= '&nbsp;' . $lines[$l] . '<br />';
+                }
+            }
+            $str .= '</span>';
+        }
         return $str;
     }
 
@@ -155,7 +185,7 @@ class Html implements DebugInterface
                 return '<span class="empty">NULL</span>';
                 break;
         }
-        $ret = '<span class="value ' . $type . '">' . $var . '</span> ';
+        $ret = '<span class="value ' . $type . '">' . $var . '</span>';
 
         if ($type == 'string') {
             $ret .= '<span class="type">string[' . $length . ']</span>';
