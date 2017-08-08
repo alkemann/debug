@@ -84,6 +84,37 @@ class Html implements DebugInterface
         return $ret;
     }
 
+    public static function dump_closure(\Closure $c, Debug $debug) {
+        $str = '<span class="value">Closure</span><span class="value integer">(';
+        $r = new \ReflectionFunction($c);
+        $params = [];
+        foreach($r->getParameters() as $p) {
+            $s = '';
+            if($p->isArray()) {
+                $s .= 'array ';
+            } else if($p->getClass()) {
+                $s .= '<span class="class">' . $p->getClass()->name . '</span> ';
+            }
+            if($p->isPassedByReference()){
+                $s .= '&';
+            }
+            $s .= '$' . $p->name;
+            if($p->isOptional()) {
+                $s .= ' = ' . var_export($p->getDefaultValue(), TRUE);
+            }
+            $params []= $s;
+        }
+        $str .= implode(', ', $params);
+        $str .= ')</span><span class=""> {' . '<br />' . PHP_EOL;
+        $lines = file($r->getFileName());
+        for($l = $r->getStartLine(); $l < $r->getEndLine(); $l++) {
+            $str .= '&nbsp;&nbsp;' . $lines[$l] . '<br />';
+        }
+        $str .= '</span>';
+
+        return $str;
+    }
+
     public static function dump_properties(\ReflectionObject $reflection, $obj, string $type, string $rule, Debug $debug)
     {
         $vars = $reflection->getProperties($rule);
@@ -96,7 +127,9 @@ class Html implements DebugInterface
             $value = $refProp->getValue($obj);
             $ret .= '<li>';
             $ret .= '<span class="access">' . $type . '</span> <span class="property">' . $property . '</span> ';
-            if (in_array($property, $debug->options['blacklist']['property'])) {
+            if ($value instanceof \Closure) {
+                $ret .= ' : ' . static::dump_closure($value, $debug);
+            } elseif (in_array($property, $debug->options['blacklist']['property'])) {
                 $ret .= ' : <span class="empty"> -- Blacklisted Property Avoided -- </span>';
             } else {
                 $ret .= ' : ' . $debug->dump_it($value);

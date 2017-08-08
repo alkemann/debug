@@ -177,6 +177,8 @@ class Debug
         }
         if (is_array($var))
             return $adapter::dump_array($var, $this);
+        elseif ($var instanceof \Closure)
+            return $adapter::dump_closure($var, $this);
         elseif (is_object($var))
             return $adapter::dump_object($var, $this);
         else
@@ -222,6 +224,7 @@ class Debug
         array_shift($arr);
         return $arr;
     }
+
 
     public function api($var): array
     {
