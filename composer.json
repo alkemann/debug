@@ -9,8 +9,7 @@
         }
     ],
     "autoload": {
-        "psr-4": {
-            "alkemann\\debug\\": "src/"
-        }
+        "psr-4": { "alkemann\\debug\\": "src/" },
+        "files": [ "src/functions.php" ]
     }
 }
